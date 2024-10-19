@@ -1,0 +1,17 @@
+<div class="d-flex justify-content-center mt-3 gap-4">
+    <% if (page > 1) { %>
+    <a
+      href="?page=<%= page - 1 %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>&amount=<%= amount || '' %>"
+      class="btn btn-primary"
+      style="width: 100px"
+      >Previous</a
+    >
+    <% } %> <% if (page < totalPages) { %>
+    <a
+      href="?page=<%= page + 1 %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>&amount=<%= amount || '' %>"
+      class="btn btn-primary"
+      style="width: 100px"
+      >Next</a
+    >
+    <% } %>
+  </div>

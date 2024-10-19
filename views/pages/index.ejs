@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transaction Management</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.css" />
+    <script src="/bootstrap/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <%- include('../layouts/header'); %>
+    <div class="container mt-5">
+      <h1 class="text-center mb-4">Transaction Management</h1>
+
+      <div class="card mb-4">
+        <div class="card-header">Filter Transactions</div>
+        <div class="card-body">
+          <form action="/" method="GET">
+            <div class="row mb-3">
+              <div class="col-md-2">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="startDate"
+                  name="startDate"
+                  value="<%= startDate %>"
+                />
+              </div>
+              <div class="col-md-2">
+                <label for="endDate" class="form-label">End Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="endDate"
+                  name="endDate"
+                  value="<%= endDate %>"
+                />
+              </div>
+              <div class="col-md-2">
+                <label for="minAmount" class="form-label">Min Amount</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="minAmount"
+                  name="minAmount"
+                  placeholder="Min"
+                  value="<%= minAmount %>"
+                />
+              </div>
+              <div class="col-md-2">
+                <label for="maxAmount" class="form-label">Max Amount</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="maxAmount"
+                  name="maxAmount"
+                  placeholder="Max"
+                  value="<%= maxAmount %>"
+                />
+              </div>
+              <div class="col-md-4">
+                <label for="detail" class="form-label">Detail</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="detail"
+                  name="detail"
+                  placeholder="Detail"
+                  value="<%= detail %>"
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="/" class="btn btn-secondary">Reset</a>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">Upload Transaction Data (CSV)</div>
+        <div class="card-body">
+          <form action="/upload" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="csvFile" class="form-label">Upload CSV File</label>
+              <input
+                type="file"
+                class="form-control"
+                id="csvFile"
+                name="csvFile"
+                accept=".csv"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-success">Upload</button>
+            <span id="uploadTime" class="ms-3">
+              <%= uploadTime ? `Uploaded in ${uploadTime} seconds` : '' %>
+            </span>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">Transaction Results</div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>Date/Time</th>
+                  <th>Credit</th>
+                  <th>Detail</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (transactions.length > 0) { %>
+                  <% transactions.forEach(transaction => { %>
+                    <tr>
+                      <td><%= transaction.date_time %></td>
+                      <td><%= transaction.credit %></td>
+                      <td><%= transaction.detail %></td>
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="3" class="text-center">No transactions found</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-center mt-3 gap-4">
+            <% 
+              // Hàm để xây dựng query string cho phân trang
+              function buildPaginationUrl(page) {
+                let url = '?page=' + page;
+
+                if (startDate) {
+                  url += '&startDate=' + encodeURIComponent(startDate);
+                }
+                if (endDate) {
+                  url += '&endDate=' + encodeURIComponent(endDate);
+                }
+                if (minAmount) {
+                  url += '&minAmount=' + encodeURIComponent(minAmount);
+                }
+                if (maxAmount) {
+                  url += '&maxAmount=' + encodeURIComponent(maxAmount);
+                }
+                if (detail) {
+                  url += '&detail=' + encodeURIComponent(detail);
+                }
+
+                return url;
+              }
+            %>
+            <% if (page > 1) { %>
+              <a
+                href="<%= buildPaginationUrl(page - 1) %>"
+                class="btn btn-primary"
+                style="width: 100px"
+              >Previous</a>
+            <% } %>
+            <% if (page < totalPages) { %>
+              <a
+                href="<%= buildPaginationUrl(page + 1) %>"
+                class="btn btn-primary"
+                style="width: 100px"
+              >Next</a>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <%- include('../layouts/footer'); %>
+  </body>
+</html>
