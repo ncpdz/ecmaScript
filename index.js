@@ -1,10 +1,8 @@
 const express = require("express");
 const csvParser = require("csv-parser");
-const fs = require("fs");
 const mysql = require("mysql2/promise");
 const path = require("path");
 const fileUpload = require("express-fileupload");
-const util = require("util");
 const app = express();
 const stream = require("stream");
 
@@ -59,7 +57,7 @@ function buildFilterConditions(queryParams) {
   }
 
   if (minAmount) {
-    const parsedMinAmount = parseFloat(minAmount); // Chuyển minAmount thành số
+    const parsedMinAmount = parseFloat(minAmount);
     if (!isNaN(parsedMinAmount)) {
       conditions.push("credit >= ?");
       values.push(parsedMinAmount);
@@ -67,7 +65,7 @@ function buildFilterConditions(queryParams) {
   }
 
   if (maxAmount) {
-    const parsedMaxAmount = parseFloat(maxAmount); // Chuyển maxAmount thành số
+    const parsedMaxAmount = parseFloat(maxAmount); 
     if (!isNaN(parsedMaxAmount)) {
       conditions.push("credit <= ?");
       values.push(parsedMaxAmount);
@@ -98,14 +96,12 @@ app.get("/", async (req, res) => {
     const limit = 50;
     const offset = (currentPage - 1) * limit;
 
-    // Build the WHERE clause and corresponding values
     const { conditions, values } = buildFilterConditions(req.query);
     let whereClause = "";
     if (conditions.length > 0) {
       whereClause = " WHERE " + conditions.join(" AND ");
     }
 
-    // Query data
     const dataQuery = `
       SELECT date_time, credit, detail
       FROM chuyenkhoan
@@ -136,7 +132,6 @@ app.get("/", async (req, res) => {
       };
     });
 
-    // Query to count total filtered records
     const countQuery = `
       SELECT COUNT(*) AS total
       FROM chuyenkhoan
@@ -171,27 +166,23 @@ app.post("/upload", async (req, res) => {
 
     const csvFile = req.files.csvFile;
 
-    // Chuyển đổi file buffer thành Readable stream
     const bufferStream = new stream.PassThrough();
     bufferStream.end(csvFile.data);
 
     const transactions = [];
 
-    // Đọc và phân tích file CSV từ buffer
     await new Promise((resolve, reject) => {
       bufferStream
         .pipe(csvParser())
         .on("data", (row) => {
-          // Xử lý các trường có dấu ngoặc kép trong tên cột
           const cleanRow = {};
           for (let key in row) {
-            const cleanedKey = key.replace(/"/g, "").trim(); // Loại bỏ dấu ngoặc kép
+            const cleanedKey = key.replace(/"/g, "").trim(); 
             cleanRow[cleanedKey] = row[key];
           }
 
           const { date_time, trans_no, credit, debit, detail } = cleanRow;
 
-          // Kiểm tra dữ liệu và xử lý định dạng của cột date_time
           if (date_time && date_time.includes("_")) {
             const cleanDateTime = date_time.replace(/"/g, "").trim();
             const [date, seconds] = cleanDateTime.split("_");
@@ -235,12 +226,10 @@ app.post("/upload", async (req, res) => {
 
     console.log("Transactions to save:", transactions);
 
-    // Start measuring insertion time
     const insertionStartTime = Date.now();
 
-    // Batch insert các giao dịch vào cơ sở dữ liệu theo từng nhóm nhỏ
     if (transactions.length > 0) {
-      const batchSize = 100; // Số lượng batch
+      const batchSize = 100; 
       for (let i = 0; i < transactions.length; i += batchSize) {
         const batch = transactions.slice(i, i + batchSize);
         const placeholders = batch.map(() => "(?, ?, ?, ?, ?)").join(", ");
@@ -255,7 +244,6 @@ app.post("/upload", async (req, res) => {
       }
     }
 
-    // End measuring insertion time
     const insertionEndTime = Date.now();
     const timeTakenSeconds = (
       (insertionEndTime - insertionStartTime) /
@@ -265,7 +253,6 @@ app.post("/upload", async (req, res) => {
     console.log("All transactions saved to the database");
     console.log(`Insertion Time: ${timeTakenSeconds} seconds`);
 
-    // Redirect về trang chính với thời gian chèn vào MySQL
     res.redirect(`/?uploadTime=${timeTakenSeconds}`);
   } catch (err) {
     console.error("Error saving transactions to database:", err);
